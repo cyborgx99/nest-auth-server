@@ -1,0 +1,37 @@
+version: '3.8'
+# docker exec -ti container_name sh
+services:
+  postgres:
+    container_name: postgres
+    image: postgres:14
+    networks:
+      - nest-net
+    environment:
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
+      POSTGRES_USER: ${DB_USERNAME}
+      POSTGRES_DB: ${DB_DATABASE_NAME}
+      PG_DATA: /var/lib/postgresql/data
+    ports:
+      - 5432:5432
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+  main:
+    container_name: nest-server
+    build:
+      context: .
+      target: development
+    volumes:
+      - .:/usr/src/app
+      - /usr/src/app/node_modules
+    ports:
+      - ${PORT}:${PORT}
+      - 9229:9229
+    command: npm run start:dev
+    networks:
+      - nest-net
+    depends_on:
+      - postgres
+networks:
+  nest-net:
+volumes:
+  pgdata:
