@@ -17,7 +17,7 @@ model User {
   name     String
   lastName String
 
-  hashedRt String?
+  refreshTokens String[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
