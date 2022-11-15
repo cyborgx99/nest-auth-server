@@ -12,12 +12,12 @@ export class UserService {
     return this.prismaService.user.create({ data: createUserDto });
   }
 
-  updateUser(userId: string, updateUserDto: UpdateUserDto): Promise<User> {
+  updateUser(userId: string, userUpdateInput: UpdateUserDto): Promise<User> {
     return this.prismaService.user.update({
       where: {
         id: userId,
       },
-      data: updateUserDto,
+      data: userUpdateInput,
     });
   }
 

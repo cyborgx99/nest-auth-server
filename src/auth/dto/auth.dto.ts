@@ -16,6 +16,14 @@ export class SignUpDto {
   password: string;
 }
 
+export class SignInDto {
+  @IsEmail()
+  email: string;
+
+  @MinLength(6)
+  password: string;
+}
+
 export class LoginDto {
   @IsEmail()
   email: string;
@@ -34,3 +42,22 @@ export class UpdateRefreshTokenDto {
   userId: string;
   refreshToken: string;
 }
+
+export type Tokens = {
+  accessToken: string;
+  refreshToken: string;
+};
+
+export type AuthSuccessResponse = {
+  accessToken: string;
+};
+
+export type TokenPayload = {
+  id: string;
+};
+
+export type DecodedTokenPayload = {
+  id: string;
+  iat: number;
+  exp: number;
+};

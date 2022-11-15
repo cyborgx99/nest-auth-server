@@ -1,12 +1,8 @@
 import { IsEmail, MaxLength, MinLength } from 'class-validator';
 
-export class UserWithoutSensitiveInformation {
+export class AuthorizedUser {
   id: string;
-  email: string;
-  name: string;
-  lastName: string;
-  createdAt: Date;
-  updatedAt: Date;
+  refreshToken?: string;
 }
 
 export class UpdateUserDto {
@@ -21,5 +17,5 @@ export class UpdateUserDto {
   @MaxLength(32)
   lastName?: string;
 
-  hashedRt?: string;
+  refreshTokens: string[];
 }

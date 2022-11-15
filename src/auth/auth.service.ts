@@ -1,12 +1,22 @@
-import { Injectable } from '@nestjs/common';
+import {
+  Injectable,
+  UnauthorizedException,
+  ForbiddenException,
+} from '@nestjs/common';
 import { PrismaService } from 'prisma/prisma.service';
 import { UserService } from 'src/user/user.service';
-import { SignUpDto, UpdateRefreshTokenDto } from './dto/auth.dto';
+import {
+  AuthSuccessResponse,
+  SignInDto,
+  SignUpDto,
+  TokenPayload,
+  Tokens,
+} from './dto/auth.dto';
 import * as bcrypt from 'bcrypt';
-import { TokenPayload, Tokens } from './types';
 import { JwtService, JwtSignOptions } from '@nestjs/jwt';
 import { ConfigService } from '@nestjs/config';
-import { UpdateUserDto } from 'src/user/user.dto';
+import { Response } from 'express';
+import { CookieNames, cookieOptions } from 'src/common/constants';
 
 @Injectable()
 export class AuthService {
@@ -32,25 +42,24 @@ export class AuthService {
     return bcrypt.hash(data, saltRounds);
   }
 
-  async updateRefreshTokenHash(refreshTokenDto: UpdateRefreshTokenDto) {
-    const refreshTokenHash = await this.hashData(refreshTokenDto.refreshToken);
+  async generateTokens(payload: TokenPayload): Promise<Tokens> {
+    const [accessToken, refreshToken] = await Promise.all([
+      this.signToken(payload, this.accessTokenOptions),
+      this.signToken(payload, this.refreshTokenOptions),
+    ]);
 
-    const updateUserDto: UpdateUserDto = {
-      hashedRt: refreshTokenHash,
-    };
-
-    await this.userService.updateUser(refreshTokenDto.userId, updateUserDto);
+    return { accessToken, refreshToken };
   }
 
   signToken(payload: TokenPayload, options: JwtSignOptions) {
     return this.jwtService.sign(payload, options);
   }
 
-  comparePasswords(password: string, hashed: string): Promise<boolean> {
-    return bcrypt.compare(password, hashed);
+  compareDataWithHash(data: string, hash: string): Promise<boolean> {
+    return bcrypt.compare(data, hash);
   }
 
-  async signUp(data: SignUpDto): Promise<Tokens> {
+  async signUp(data: SignUpDto): Promise<AuthSuccessResponse> {
     const hashedPassword = await this.hashData(data.password);
 
     const dtoWithHashedPassword: SignUpDto = {
@@ -61,21 +70,103 @@ export class AuthService {
     const user = await this.userService.createUser(dtoWithHashedPassword);
     const payload: TokenPayload = { id: user.id };
 
-    const [accessToken, refreshToken] = await Promise.all([
-      this.signToken(payload, this.accessTokenOptions),
-      this.signToken(payload, this.refreshTokenOptions),
-    ]);
+    const tokens = await this.generateTokens(payload);
 
-    await this.updateRefreshTokenHash({ userId: user.id, refreshToken });
+    await this.userService.updateUser(user.id, {
+      refreshTokens: [...user.refreshTokens, tokens.refreshToken],
+    });
 
-    return { accessToken, refreshToken };
+    return { accessToken: tokens.accessToken };
   }
 
-  async logout() {
-    console.log(1);
+  async signIn(
+    res: Response,
+    signInDto: SignInDto,
+  ): Promise<AuthSuccessResponse> {
+    const user = await this.userService.findUserByEmail(signInDto.email);
+
+    if (
+      !user ||
+      !(await this.compareDataWithHash(signInDto.password, user.password))
+    ) {
+      throw new UnauthorizedException('Invalid credentials');
+    }
+
+    const payload: TokenPayload = { id: user.id };
+
+    const tokens = await this.generateTokens(payload);
+
+    await this.userService.updateUser(user.id, {
+      refreshTokens: [...user.refreshTokens, tokens.refreshToken],
+    });
+
+    res.cookie(CookieNames.JWT, tokens.refreshToken);
+
+    return { accessToken: tokens.accessToken };
   }
 
-  async refresh() {
-    console.log(1);
+  async logout(userId: string) {
+    await this.prismaService.user.updateMany({
+      where: {
+        id: userId,
+        refreshTokens: { isEmpty: false },
+      },
+      data: {
+        refreshTokens: [],
+      },
+    });
+  }
+
+  async refresh(
+    res: Response,
+    refreshToken: string,
+  ): Promise<AuthSuccessResponse> {
+    res.clearCookie(CookieNames.JWT, cookieOptions);
+
+    const foundUserByRefreshToken = await this.prismaService.user.findFirst({
+      where: {
+        refreshTokens: {
+          has: refreshToken,
+        },
+      },
+    });
+
+    try {
+      const decodedToken = this.jwtService.verify(refreshToken, {
+        secret: this.config.get('REFRESH_TOKEN_SECRET'),
+      });
+
+      // Detected refresh token reuse!
+      if (!foundUserByRefreshToken) {
+        await this.prismaService.user.update({
+          where: {
+            id: decodedToken.id,
+          },
+          data: {
+            refreshTokens: [],
+          },
+        });
+
+        throw new ForbiddenException();
+      }
+
+      const newRefreshTokenArray = foundUserByRefreshToken.refreshTokens.filter(
+        (rt) => rt !== refreshToken,
+      );
+
+      const payload: TokenPayload = { id: foundUserByRefreshToken.id };
+
+      const tokens = await this.generateTokens(payload);
+
+      await this.userService.updateUser(foundUserByRefreshToken.id, {
+        refreshTokens: [...newRefreshTokenArray, tokens.refreshToken],
+      });
+
+      res.cookie(CookieNames.JWT, tokens.refreshToken, cookieOptions);
+
+      return { accessToken: tokens.accessToken };
+    } catch (error) {
+      throw new ForbiddenException();
+    }
   }
 }
