@@ -16,6 +16,8 @@ services:
     volumes:
       - pgdata:/var/lib/postgresql/data
   main:
+    environment:
+      DATABASE_URL: ${DOCKER_DB_URI}
     container_name: nest-server
     build:
       context: .
