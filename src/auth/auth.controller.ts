@@ -13,6 +13,8 @@ import { AuthorizedUser } from 'src/user/user.dto';
 import { RefreshTokenGuard } from 'src/common/guards';
 import { CurrentUser, Public } from 'src/common/decorators';
 import { Response } from 'express';
+import { Cookies } from 'src/common/decorators/cookies.decorator';
+import { CookieNames } from 'src/common/constants';
 
 @Controller('auth')
 export class AuthController {
@@ -36,10 +38,13 @@ export class AuthController {
   }
 
   @Post('logout')
+  @Public()
   @HttpCode(HttpStatus.OK)
-  logout(@CurrentUser() user: AuthorizedUser) {
-    console.log(user);
-    return this.authService.logout(user.id);
+  logout(
+    @Res({ passthrough: true }) res: Response,
+    @Cookies(CookieNames.JWT) jwtCookie: string,
+  ) {
+    return this.authService.logout(res, jwtCookie);
   }
 
   @UseGuards(RefreshTokenGuard)

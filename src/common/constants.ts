@@ -1,18 +1,6 @@
 import { CookieOptions } from 'express';
 import * as Joi from 'joi';
 
-export const cookieOptions: CookieOptions = {
-  httpOnly: true,
-  sameSite: 'none',
-  secure: true,
-};
-
-export const configValidationSchema = Joi.object({
-  PORT: Joi.number().default(3001),
-  DATABASE_URL: Joi.string().required(),
-  ACCESS_TOKEN_SECRET: Joi.string().required(),
-});
-
 export enum MetadataNames {
   isPublic = 'isPublic',
 }
@@ -25,3 +13,23 @@ export enum StrategyNames {
 export enum CookieNames {
   JWT = 'JWT',
 }
+
+export enum EnvNames {
+  PORT = 'PORT',
+  DATABASE_URL = 'DATABASE_URL',
+  ACCESS_TOKEN_SECRET = 'ACCESS_TOKEN_SECRET',
+  REFRESH_TOKEN_SECRET = 'REFRESH_TOKEN_SECRET',
+}
+
+export const cookieOptions: CookieOptions = {
+  httpOnly: true,
+  sameSite: 'none',
+  secure: true,
+};
+
+export const configValidationSchema = Joi.object({
+  [EnvNames.PORT]: Joi.number().default(3001),
+  [EnvNames.DATABASE_URL]: Joi.string().required(),
+  [EnvNames.ACCESS_TOKEN_SECRET]: Joi.string().required(),
+  [EnvNames.REFRESH_TOKEN_SECRET]: Joi.string().required(),
+});

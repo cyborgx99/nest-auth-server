@@ -43,21 +43,25 @@ export class UpdateRefreshTokenDto {
   refreshToken: string;
 }
 
-export type Tokens = {
+export interface Tokens {
   accessToken: string;
   refreshToken: string;
-};
+}
 
-export type AuthSuccessResponse = {
+export interface AuthSuccessResponse {
   accessToken: string;
-};
+}
 
-export type TokenPayload = {
+export interface SuccessResponse {
+  success: boolean;
+}
+
+export interface TokenPayload {
   id: string;
-};
+}
 
-export type DecodedTokenPayload = {
+export interface DecodedTokenPayload {
   id: string;
   iat: number;
   exp: number;
-};
+}

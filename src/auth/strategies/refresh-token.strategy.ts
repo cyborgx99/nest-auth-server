@@ -3,7 +3,7 @@ import { ConfigService } from '@nestjs/config';
 import { PassportStrategy } from '@nestjs/passport';
 import { Request } from 'express';
 import { ExtractJwt, Strategy } from 'passport-jwt';
-import { CookieNames, StrategyNames } from 'src/common/constants';
+import { CookieNames, EnvNames, StrategyNames } from 'src/common/constants';
 import { AuthorizedUser } from 'src/user/user.dto';
 import { DecodedTokenPayload } from '../dto/auth.dto';
 
@@ -25,7 +25,7 @@ export class RefrestTokenStrategy extends PassportStrategy(
           return token;
         },
       ]),
-      secretOrKey: config.get('REFRESH_TOKEN_SECRET'),
+      secretOrKey: config.get(EnvNames.REFRESH_TOKEN_SECRET),
       passReqToCallback: true,
     });
   }

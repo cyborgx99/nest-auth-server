@@ -9,6 +9,7 @@ import {
   AuthSuccessResponse,
   SignInDto,
   SignUpDto,
+  SuccessResponse,
   TokenPayload,
   Tokens,
 } from './dto/auth.dto';
@@ -16,7 +17,7 @@ import * as bcrypt from 'bcrypt';
 import { JwtService, JwtSignOptions } from '@nestjs/jwt';
 import { ConfigService } from '@nestjs/config';
 import { Response } from 'express';
-import { CookieNames, cookieOptions } from 'src/common/constants';
+import { CookieNames, cookieOptions, EnvNames } from 'src/common/constants';
 
 @Injectable()
 export class AuthService {
@@ -29,12 +30,12 @@ export class AuthService {
 
   accessTokenOptions: JwtSignOptions = {
     expiresIn: '15m',
-    secret: this.config.get('ACCESS_TOKEN_SECRET'),
+    secret: this.config.get(EnvNames.ACCESS_TOKEN_SECRET),
   };
 
   refreshTokenOptions: JwtSignOptions = {
     expiresIn: '3d',
-    secret: this.config.get('REFRESH_TOKEN_SECRET'),
+    secret: this.config.get(EnvNames.REFRESH_TOKEN_SECRET),
   };
 
   hashData(data: string): Promise<string> {
@@ -105,16 +106,26 @@ export class AuthService {
     return { accessToken: tokens.accessToken };
   }
 
-  async logout(userId: string) {
-    await this.prismaService.user.updateMany({
-      where: {
-        id: userId,
-        refreshTokens: { isEmpty: false },
-      },
-      data: {
-        refreshTokens: [],
-      },
+  async logout(res: Response, jwtCookie: string): Promise<SuccessResponse> {
+    if (!jwtCookie) throw new UnauthorizedException();
+
+    const user = await this.userService.findUserByRefreshToken(jwtCookie);
+
+    if (!user) {
+      res.clearCookie(CookieNames.JWT, cookieOptions);
+      return { success: true };
+    }
+
+    const newRefreshTokenArray = user.refreshTokens.filter(
+      (rt) => rt !== jwtCookie,
+    );
+
+    await this.userService.updateUser(user.id, {
+      refreshTokens: newRefreshTokenArray,
     });
+
+    res.clearCookie(CookieNames.JWT, cookieOptions);
+    return { success: true };
   }
 
   async refresh(
@@ -123,28 +134,18 @@ export class AuthService {
   ): Promise<AuthSuccessResponse> {
     res.clearCookie(CookieNames.JWT, cookieOptions);
 
-    const foundUserByRefreshToken = await this.prismaService.user.findFirst({
-      where: {
-        refreshTokens: {
-          has: refreshToken,
-        },
-      },
-    });
+    const foundUserByRefreshToken =
+      await this.userService.findUserByRefreshToken(refreshToken);
 
     try {
       const decodedToken = this.jwtService.verify(refreshToken, {
-        secret: this.config.get('REFRESH_TOKEN_SECRET'),
+        secret: this.config.get(EnvNames.REFRESH_TOKEN_SECRET),
       });
 
       // Detected refresh token reuse!
       if (!foundUserByRefreshToken) {
-        await this.prismaService.user.update({
-          where: {
-            id: decodedToken.id,
-          },
-          data: {
-            refreshTokens: [],
-          },
+        await this.userService.updateUser(decodedToken.id, {
+          refreshTokens: [],
         });
 
         throw new ForbiddenException();

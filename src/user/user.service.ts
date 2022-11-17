@@ -28,4 +28,14 @@ export class UserService {
       },
     });
   }
+
+  findUserByRefreshToken(token: string): Promise<User | undefined> {
+    return this.prismaService.user.findFirst({
+      where: {
+        refreshTokens: {
+          has: token,
+        },
+      },
+    });
+  }
 }
