@@ -10,19 +10,51 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
+enum UserRole {
+  USER
+  OWNER
+  ADMIN
+}
 model User {
   id       String  @id @default(uuid())
   email    String  @unique
   password String
   name     String
   lastName String
-
   refreshTokens String[]
-
+  role      UserRole @default(USER)
+  items Item[]
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
   
 
-@@map("Users")
+  @@map("Users")
 }
 
+
+model Item {
+  id         String                @id @default(uuid())
+  title      String
+  price      Int
+  imageUrl   String
+  categories CategoriesOnItems[]
+  creator   User @relation(fields: [creatorId], references: [id])
+  creatorId String
+}
+
+model Category {
+  id         String         @id @default(uuid())
+  name  String              @unique
+  items CategoriesOnItems[]
+}
+
+model CategoriesOnItems {
+  item       Item     @relation(fields: [itemId], references: [id])
+  itemId     String
+  category   Category @relation(fields: [categoryId], references: [id])
+  categoryId String
+  assignedAt DateTime @default(now())
+
+
+  @@id([itemId, categoryId])
+}
