@@ -8,6 +8,7 @@ import { PrismaService } from 'prisma/prisma.service';
 import { APP_GUARD } from '@nestjs/core';
 import { AuthTokenGuard } from './common/guards';
 import { configValidationSchema } from './common/constants';
+import { ItemModule } from './item/item.module';
 
 @Module({
   imports: [
@@ -16,6 +17,7 @@ import { configValidationSchema } from './common/constants';
       validationSchema: configValidationSchema,
     }),
     AuthModule,
+    ItemModule,
   ],
   controllers: [AppController],
   providers: [

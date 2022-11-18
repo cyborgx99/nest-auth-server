@@ -9,7 +9,6 @@ export type Cookies = {
 export const Cookies = createParamDecorator(
   (key: CookieNames, context: ExecutionContext): Cookies | string => {
     const request: Request = context.switchToHttp().getRequest();
-
     const cookies = <Cookies>request.cookies;
 
     if (!key) return cookies;

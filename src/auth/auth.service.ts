@@ -94,7 +94,6 @@ export class AuthService {
     }
 
     const payload: TokenPayload = { id: user.id };
-
     const tokens = await this.generateTokens(payload);
 
     await this.userService.updateUser(user.id, {
@@ -156,7 +155,6 @@ export class AuthService {
       );
 
       const payload: TokenPayload = { id: foundUserByRefreshToken.id };
-
       const tokens = await this.generateTokens(payload);
 
       await this.userService.updateUser(foundUserByRefreshToken.id, {
