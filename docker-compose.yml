@@ -28,7 +28,7 @@ services:
     ports:
       - ${PORT}:${PORT}
       - 9229:9229
-    command: npm run start:dev
+    command: npm run docker:cmd
     networks:
       - nest-net
     depends_on:
