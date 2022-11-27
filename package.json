@@ -15,7 +15,7 @@
     "start:debug": "nest start --debug --watch",
     "start:prod": "node dist/main",
     "start:docker": "docker-compose up --build -V",
-    "docker:cmd": "prisma migrate dev --name=' ' && prisma migrate reset --force && npm run start:dev",
+    "docker:cmd": "prisma migrate dev --name=' ' && prisma migrate reset --force && npm run seed && npm run start:dev",
     "lint": "eslint \"{src,apps,libs,test}/**/*.ts\" --fix",
     "test": "jest",
     "test:watch": "jest --watch",

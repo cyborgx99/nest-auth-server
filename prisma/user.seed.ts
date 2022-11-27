@@ -22,7 +22,7 @@ export const seedUser = async (
     never,
     Prisma.RejectOnNotFound | Prisma.RejectPerOperation
   >,
-) => {
+): Promise<Prisma.BatchPayload> => {
   const usersWithHashedPassword: Prisma.UserCreateManyInput[] =
     await Promise.all(
       users.map(async (user) => {
@@ -33,7 +33,7 @@ export const seedUser = async (
       }),
     );
 
-  await prisma.user.createMany({
+  return prisma.user.createMany({
     data: usersWithHashedPassword,
   });
 };

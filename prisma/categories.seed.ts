@@ -19,7 +19,7 @@ export const seedCategories = async (
     Prisma.RejectOnNotFound | Prisma.RejectPerOperation
   >,
 ) => {
-  await prisma.category.createMany({
+  return prisma.category.createMany({
     data: categories,
   });
 };
