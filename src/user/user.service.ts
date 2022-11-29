@@ -29,6 +29,14 @@ export class UserService {
     });
   }
 
+  findUserById(id: string): Promise<User | undefined> {
+    return this.prismaService.user.findUnique({
+      where: {
+        id,
+      },
+    });
+  }
+
   findUserByRefreshToken(token: string): Promise<User | undefined> {
     return this.prismaService.user.findFirst({
       where: {
