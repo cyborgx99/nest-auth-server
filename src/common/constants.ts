@@ -19,12 +19,13 @@ export enum EnvNames {
   DATABASE_URL = 'DATABASE_URL',
   ACCESS_TOKEN_SECRET = 'ACCESS_TOKEN_SECRET',
   REFRESH_TOKEN_SECRET = 'REFRESH_TOKEN_SECRET',
+  CORS_ORIGIN = 'CORS_ORIGIN',
 }
 
 export const cookieOptions: CookieOptions = {
   httpOnly: true,
   sameSite: 'none',
-  secure: true,
+  secure: process.env.NODE_ENV === 'production' ? true : false,
 };
 
 export const configValidationSchema = Joi.object({
@@ -32,4 +33,5 @@ export const configValidationSchema = Joi.object({
   [EnvNames.DATABASE_URL]: Joi.string().required(),
   [EnvNames.ACCESS_TOKEN_SECRET]: Joi.string().required(),
   [EnvNames.REFRESH_TOKEN_SECRET]: Joi.string().required(),
+  [EnvNames.CORS_ORIGIN]: Joi.string().required(),
 });

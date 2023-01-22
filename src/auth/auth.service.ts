@@ -3,7 +3,7 @@ import {
   UnauthorizedException,
   ForbiddenException,
 } from '@nestjs/common';
-import { PrismaService } from 'prisma/prisma.service';
+import { PrismaService } from 'src/prisma.service';
 import { UserService } from 'src/user/user.service';
 import {
   AuthSuccessResponse,
@@ -60,7 +60,7 @@ export class AuthService {
     return bcrypt.compare(data, hash);
   }
 
-  async signUp(data: SignUpDto): Promise<AuthSuccessResponse> {
+  async signUp(res: Response, data: SignUpDto): Promise<AuthSuccessResponse> {
     const hashedPassword = await this.hashData(data.password);
 
     const dtoWithHashedPassword: SignUpDto = {
@@ -76,6 +76,8 @@ export class AuthService {
     await this.userService.updateUser(user.id, {
       refreshTokens: [...user.refreshTokens, tokens.refreshToken],
     });
+
+    res.cookie(CookieNames.JWT, tokens.refreshToken, cookieOptions);
 
     return { accessToken: tokens.accessToken };
   }
@@ -100,7 +102,7 @@ export class AuthService {
       refreshTokens: [...user.refreshTokens, tokens.refreshToken],
     });
 
-    res.cookie(CookieNames.JWT, tokens.refreshToken);
+    res.cookie(CookieNames.JWT, tokens.refreshToken, cookieOptions);
 
     return { accessToken: tokens.accessToken };
   }
@@ -124,14 +126,19 @@ export class AuthService {
     });
 
     res.clearCookie(CookieNames.JWT, cookieOptions);
+
     return { success: true };
   }
 
   async refresh(
     res: Response,
-    refreshToken: string,
+    refreshToken: string | undefined,
   ): Promise<AuthSuccessResponse> {
     res.clearCookie(CookieNames.JWT, cookieOptions);
+
+    if (!refreshToken) {
+      throw new ForbiddenException();
+    }
 
     const foundUserByRefreshToken =
       await this.userService.findUserByRefreshToken(refreshToken);

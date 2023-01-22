@@ -12,12 +12,12 @@ async function bootstrap() {
   app.useGlobalPipes(new ValidationPipe());
   app.use(cookieParser());
   app.enableCors({
-    origin: ['http://localhost:4200'],
+    origin: [config.get('CORS_ORIGIN') ?? ''],
     methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE'],
     credentials: true,
   });
 
-  await app.listen(config.get('PORT'));
+  await app.listen(config.get('PORT') ?? 3002);
 }
 
 bootstrap();

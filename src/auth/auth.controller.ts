@@ -7,8 +7,14 @@ import {
   UseGuards,
   Res,
   Get,
+  NotFoundException,
 } from '@nestjs/common';
-import { AuthSuccessResponse, SignInDto, SignUpDto } from './dto/auth.dto';
+import {
+  AuthSuccessResponse,
+  SignInDto,
+  SignUpDto,
+  SuccessResponse,
+} from './dto/auth.dto';
 import { AuthService } from './auth.service';
 import {
   AuthorizedUser,
@@ -32,8 +38,11 @@ export class AuthController {
   @Post('sign-up')
   @Public()
   @HttpCode(HttpStatus.CREATED)
-  signUp(@Body() signUpDto: SignUpDto): Promise<AuthSuccessResponse> {
-    return this.authService.signUp(signUpDto);
+  signUp(
+    @Res({ passthrough: true }) res: Response,
+    @Body() signUpDto: SignUpDto,
+  ): Promise<AuthSuccessResponse> {
+    return this.authService.signUp(res, signUpDto);
   }
 
   @Get('current-user')
@@ -41,6 +50,10 @@ export class AuthController {
     @CurrentUser() user: AuthorizedUser,
   ): Promise<UserWithoutSensitiveInformation> {
     const foundUser = await this.userService.findUserById(user.id);
+
+    if (!foundUser) {
+      throw new NotFoundException('User not found');
+    }
 
     const userWithoutSensitiveInformation =
       userToUserWithoutSensitiveInformation(foundUser);
@@ -64,7 +77,7 @@ export class AuthController {
   logout(
     @Res({ passthrough: true }) res: Response,
     @Cookies(CookieNames.JWT) jwtCookie: string,
-  ) {
+  ): Promise<SuccessResponse> {
     return this.authService.logout(res, jwtCookie);
   }
 
@@ -73,8 +86,8 @@ export class AuthController {
   @Post('refresh')
   @HttpCode(HttpStatus.OK)
   refresh(
-    @CurrentUser() user: AuthorizedUser,
     @Res({ passthrough: true }) res: Response,
+    @CurrentUser() user: AuthorizedUser,
   ): Promise<AuthSuccessResponse> {
     return this.authService.refresh(res, user.refreshToken);
   }
