@@ -26,5 +26,5 @@ export class UpdateUserDto {
   @MaxLength(32)
   lastName?: string;
 
-  refreshTokens: string[];
+  refreshTokens?: string[];
 }

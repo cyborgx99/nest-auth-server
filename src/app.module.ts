@@ -4,7 +4,7 @@ import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { AuthModule } from './auth/auth.module';
 import { UserService } from './user/user.service';
-import { PrismaService } from 'prisma/prisma.service';
+import { PrismaService } from 'src/prisma.service';
 import { APP_GUARD } from '@nestjs/core';
 import { AuthTokenGuard } from './common/guards';
 import { configValidationSchema } from './common/constants';

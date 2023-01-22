@@ -43,24 +43,24 @@ export class UpdateRefreshTokenDto {
   refreshToken: string;
 }
 
-export interface Tokens {
+export class Tokens {
   accessToken: string;
   refreshToken: string;
 }
 
-export interface AuthSuccessResponse {
+export class AuthSuccessResponse {
   accessToken: string;
 }
 
-export interface SuccessResponse {
+export class SuccessResponse {
   success: boolean;
 }
 
-export interface TokenPayload {
+export class TokenPayload {
   id: string;
 }
 
-export interface DecodedTokenPayload {
+export class DecodedTokenPayload {
   id: string;
   iat: number;
   exp: number;
