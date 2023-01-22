@@ -23,14 +23,14 @@ export const seedItems = async (
       price: 20,
       creator: {
         connect: {
-          id: user.id,
+          id: user?.id,
         },
       },
       categories: {
         create: {
           category: {
             connect: {
-              id: categories.find((category) => category.name === 'Meat').id,
+              id: categories.find((category) => category.name === 'Meat')?.id,
             },
           },
         },
@@ -43,14 +43,14 @@ export const seedItems = async (
       price: 10,
       creator: {
         connect: {
-          id: user.id,
+          id: user?.id,
         },
       },
       categories: {
         create: {
           category: {
             connect: {
-              id: categories.find((category) => category.name === 'Drinks').id,
+              id: categories.find((category) => category.name === 'Drinks')?.id,
             },
           },
         },
@@ -63,14 +63,14 @@ export const seedItems = async (
       price: 15,
       creator: {
         connect: {
-          id: user.id,
+          id: user?.id,
         },
       },
       categories: {
         create: {
           category: {
             connect: {
-              id: categories.find((category) => category.name === 'Soups').id,
+              id: categories.find((category) => category.name === 'Soups')?.id,
             },
           },
         },
